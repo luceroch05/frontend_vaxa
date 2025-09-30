@@ -28,7 +28,8 @@ import {
   List,
   ListItem,
   ListItemText,
-  Divider
+  Divider,
+  FormHelperText
 } from '@mui/material'
 import {
   Security,
@@ -47,6 +48,7 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 import emailjs from '@emailjs/browser'
+import { format } from 'path'
 
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -61,6 +63,8 @@ export default function Home() {
   })
   const [formStatus, setFormStatus] = useState({ type: '', message: '' })
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
 
   const handleInputChange = (e: any) => {
     const { name, value, checked } = e.target
@@ -72,6 +76,9 @@ export default function Home() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!validateForm()) {
+    return; // si hay errores, no envía
+  }
     setLoading(true);
     setFormStatus({ type: '', message: '' });
 
@@ -127,6 +134,37 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  };
+  const validateForm=()=>{
+    let tempErrors: { [key: string]: string } = {};
+    if (!formData.nombre.trim()) {
+    tempErrors.nombre = "El nombre es obligatorio.";
+    }
+    if (!formData.email.trim()) {
+    tempErrors.email = "El correo es obligatorio.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      tempErrors.email = "El correo no es válido.";
+    }
+    if (!formData.celular.trim()) {
+    tempErrors.celular = "El número de teléfono es obligatorio.";
+    } else if (!/^\d{9}$/.test(formData.celular)) {
+      tempErrors.celular = "El número de teléfono debe tener 9 dígitos.";
+    }
+    if(!formData.centro.trim()){
+      tempErrors.centro = "El nombre del centro es obligatorio.";
+    }
+    if(!formData.tamano.trim()){
+      tempErrors.tamano = "El tamaño del centro es obligatorio.";
+    }
+    if(!formData.mensaje.trim()){
+      tempErrors.mensaje = "El mensaje es obligatorio.";
+    }
+    if (!formData.acepta) {
+      tempErrors.acepta = "Debes aceptar la Política de Privacidad.";
+    }
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0; // true si no hay errores
+
   };
 
   const features = [
@@ -300,7 +338,9 @@ export default function Home() {
                         value={formData.nombre}
                         onChange={handleInputChange}
                         placeholder="Ej. Ana Pérez"
-                        required
+                        error={Boolean(errors.nombre)}
+                        helperText={errors.nombre}
+                      
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -312,7 +352,9 @@ export default function Home() {
                         value={formData.email}
                         onChange={handleInputChange}
                         placeholder="nombre@empresa.com"
-                        required
+                        error={Boolean(errors.email)}
+                        helperText={errors.email}
+                       
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -323,6 +365,8 @@ export default function Home() {
                         value={formData.celular}
                         onChange={handleInputChange}
                         placeholder="+51 9xx xxx xxx"
+                        error={Boolean(errors.celular)}
+                        helperText={errors.celular}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -333,6 +377,8 @@ export default function Home() {
                         value={formData.centro}
                         onChange={handleInputChange}
                         placeholder="Nombre de tu institución"
+                        error={Boolean(errors.centro)}
+                        helperText={errors.centro}
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -349,6 +395,9 @@ export default function Home() {
                           <MenuItem value="4-10">4–10 terapeutas</MenuItem>
                           <MenuItem value="10+">Más de 10 terapeutas</MenuItem>
                         </Select>
+                        {errors.tamano && (
+                          <FormHelperText>{errors.tamano}</FormHelperText>
+                        )}
                       </FormControl>
                     </Grid>
                     <Grid item xs={12}>
@@ -360,6 +409,8 @@ export default function Home() {
                         name="mensaje"
                         value={formData.mensaje}
                         onChange={handleInputChange}
+                        error={Boolean(errors.mensaje)}
+                        helperText={errors.mensaje}
                       />
                     </Grid>
                   </Grid>
@@ -370,7 +421,8 @@ export default function Home() {
                         name="acepta"
                         checked={formData.acepta}
                         onChange={handleInputChange}
-                        required
+
+                        
                       />
                     }
                     label={
@@ -563,18 +615,18 @@ Body (AES-256-GCM): {...}`}</pre>
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                <Image 
-                  src="/images/vaxa-logo.png" 
-                  alt="Vaxa Logo" 
-                  width={220} 
-                  height={60}
-                  style={{ objectFit: 'contain' }}
-                />
-              </Box>
-              <Typography variant="body2" color="text.secondary">
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 1 }}>
+              <Image 
+                src="/images/imagotipo vaxa.png" 
+                alt="Vaxa Logo" 
+                width={120} 
+                height={60}
+                style={{ objectFit: 'contain' }}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 © {new Date().getFullYear()} Vaxa. Todos los derechos reservados.
               </Typography>
+            </Box>
             </Grid>
             <Grid item xs={12} md={6}>
               <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
