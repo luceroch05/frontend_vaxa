@@ -46,6 +46,7 @@ import {
 } from '@mui/icons-material'
 import Link from 'next/link'
 import Image from 'next/image'
+import emailjs from '@emailjs/browser'
 
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -69,48 +70,64 @@ export default function Home() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setFormStatus({ type: '', message: '' })
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setFormStatus({ type: '', message: '' });
 
-    if (!formData.nombre || !formData.email || !formData.acepta) {
-      setFormStatus({ type: 'error', message: 'Completa tu nombre, correo y acepta la política.' })
-      setLoading(false)
-      return
-    }
+    try {
+      // Configuración de EmailJS con tu correo de hosting
+      const serviceId = 'service_86mzzho';      // Service conectado a tu SMTP
+      const templateId = 'template_g3xnt9n';    // Template creado
+      const publicKey = 'yZ3hxwjnd6qbT5XBf';      // Public key de tu cuenta
 
-    
-  try {
-    const response = await fetch("api/send-email", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(formData),
-})
+      // Parámetros que se enviarán al template de EmailJS
+      const templateParams = {
+        from_name: formData.nombre,
+        from_email: formData.email,
+        celular: formData.celular || 'No proporcionado',
+        centro: formData.centro || 'No proporcionado',
+        tamano: formData.tamano || 'No seleccionado',
+        message: formData.mensaje || 'Sin mensaje adicional',
+        reply_to: formData.email,
+      };
 
-    const result = await response.json()
+      // Enviar email directamente desde el cliente
+      const response = await emailjs.send(
+        serviceId,
+        templateId,
+        templateParams,
+        publicKey
+      );
 
-    if (result.success) {
-      setFormStatus({ type: 'success', message: '¡Gracias! Hemos recibido tu solicitud.' })
+      console.log('Email enviado:', response);
+
+      setFormStatus({
+        type: 'success',
+        message: '¡Mensaje enviado con éxito! Te responderemos en menos de 24 horas.'
+      });
+
+      // Limpiar formulario
       setFormData({
         nombre: '',
         email: '',
         celular: '',
         centro: '',
         tamano: '',
-        mensaje: 'Estoy interesado en Vaxa y deseo más información.',
+        mensaje: '',
         acepta: false
-      })
-    } else {
-      setFormStatus({ type: 'error', message: 'Ocurrió un error al enviar. Inténtalo nuevamente.' })
+      });
+
+    } catch (error) {
+      console.error('Error al enviar:', error);
+      setFormStatus({
+        type: 'error',
+        message: 'Hubo un error al enviar el mensaje. Por favor, intenta nuevamente.'
+      });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error(error)
-    setFormStatus({ type: 'error', message: 'Ocurrió un error al enviar. Inténtalo nuevamente.' })
-} finally {
-  setLoading(false)
-}
-}
+  };
 
   const features = [
     {
